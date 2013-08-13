@@ -204,7 +204,8 @@ function fill_date(id, value)
   var year = value.getFullYear();
   var month = (value.getMonth() + 1).toString();
   if (month.length < 2) month = "0" + month;
-  var date = value.getDate();
+  var date = value.getDate().toString();
+  if (date.length < 2) date = "0" + date;
   $("#" + id).val(year + "-" + month + "-" + date);
 }
 
@@ -229,6 +230,10 @@ function open_modal_booking(action, id, title, start, end)
         fill_date("booking_end", end);
       else
         fill_date("booking_end", start);
+      
+      $("#booking_start").datepicker("option", "maxDate", new Date($("#booking_start").val()));
+      $("#booking_end").datepicker("option", "minDate", new Date($("#booking_end").val()));
+      
       $("#btn_update_booking").show();
       $("#btn_delete_booking").show();
       break;
