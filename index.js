@@ -12,15 +12,15 @@ function call_ajax(action)
   
   if (action =="create_booking")
   {
-    if (!$("#book_name").val().length)
+    if (!$("#booking_title").val().length)
     {
       flag += "nama penghuni kosong \n";
     }
-    if (!$("#book_date_in").val().length)
+    if (!$("#booking_start").val().length)
     {
       flag += "tanggal masuk kosong \n";
     }
-    if (!$("#book_date_out").val().length)
+    if (!$("#booking_end").val().length)
     {
       flag += "tanggal masuk kosong \n";
     }
@@ -48,7 +48,7 @@ function call_ajax(action)
     }
     else
     {
-      div_message = "#ajax_message_book";
+      div_message = "#ajax_message_booking";
     }
 
     $(div_message)
@@ -69,7 +69,7 @@ function call_ajax(action)
 function handle_response(action, response_text)
 {
   $("#ajax_message_room").html("");
-  $("#ajax_message_book").html("");
+  $("#ajax_message_booking").html("");
   switch (action)
   {
     case "get_rooms":
@@ -119,24 +119,38 @@ function handle_response(action, response_text)
       if (response_text == true)
       {
         close_modal_booking();
-        refresh_room_calendar($("#book_room_id").val());
+        refresh_room_calendar($("#booking_room_id").val());
         refresh_search();
       }
       else
       {
-        $("#ajax_message_book").html("error tolong dicoba lagi  <br />  <br />");
+        $("#ajax_message_booking").html("error tolong dicoba lagi  <br />  <br />");
+      }
+      break;
+      
+    case "update_booking":
+      if (response_text == true)
+      {
+        close_modal_booking();
+        refresh_room_calendar($("#booking_room_id").val());
+        refresh_search();
+      }
+      else
+      {
+        $("#ajax_message_booking").html("error tolong dicoba lagi  <br />  <br />");
       }
       break;
       
     case "delete_booking":
       if (response_text == true)
       {
-        refresh_room_calendar($("#book_room_id").val());
+        close_modal_booking();
+        refresh_room_calendar($("#booking_room_id").val());
         refresh_search();
       }
       else
       {
-        $("#ajax_message_book").html("error tolong dicoba lagi  <br />  <br />");
+        $("#ajax_message_booking").html("error tolong dicoba lagi  <br />  <br />");
       }
       break;
       
@@ -146,17 +160,12 @@ function handle_response(action, response_text)
   }
 }
 
-function fill_room_id(id)
-{
-  $("#room_id").val(id);
-}
-
 function delete_room(id, name)
 {
   var r=confirm("Yakin menghapus kamar dengan nama " + name + " ?");
   if (r==true)
   {
-    fill_room_id(id);
+    $("#room_id").val(id);
     call_ajax("delete_room");
   }
   else
@@ -173,13 +182,13 @@ function open_modal_room(action, id, name, gender)
   switch(action)
   {
     case "create":
-      $("#btn_create").show();
+      $("#btn_create_room").show();
       break;
     case "update":
-      fill_room_id(id);
+      $("#room_id").val(id);
       $("#room_name").val(name);
       $("#room_gender").val(gender);
-      $("#btn_update").show();
+      $("#btn_update_room").show();
       break;
   }
 }
@@ -190,13 +199,40 @@ function close_modal_room()
   call_ajax("get_rooms");
 }
 
-function open_modal_booking()
+function fill_date(id, value)
 {
+  var year = value.getFullYear();
+  var month = (value.getMonth() + 1).toString();
+  if (month.length < 2) month = "0" + month;
+  var date = value.getDate();
+  $("#" + id).val(year + "-" + month + "-" + date);
+}
+
+function open_modal_booking(action, id, title, start, end)
+{
+  $("#form_booking a").hide();
   $("#form_booking input[type=text]").val("");
-  $("#book_date_in").datepicker("option", "maxDate", null);
-  $("#book_date_out").datepicker("option", "minDate", null);
-  $("#ajax_message_book").html("");
+  $("#booking_start").datepicker("option", "maxDate", null);
+  $("#booking_end").datepicker("option", "minDate", null);
+  $("#ajax_message_booking").html("");
   $("#modal_booking").foundation("reveal", "open");
+  switch(action)
+  {
+    case "create":
+      $("#btn_create_booking").show();
+      break;
+    case "update":
+      $("#booking_id").val(id);
+      $("#booking_title").val(title);
+      fill_date("booking_start", start);
+      if (end != null)
+        fill_date("booking_end", end);
+      else
+        fill_date("booking_end", start);
+      $("#btn_update_booking").show();
+      $("#btn_delete_booking").show();
+      break;
+  }
 }
 
 function close_modal_booking()
@@ -212,7 +248,7 @@ function refresh_room_calendar(id)
     type: "POST",
     data: {
       action: "get",
-      room_id: $("#book_room_id").val()
+      room_id: $("#booking_room_id").val()
     },
     error: function() {
       alert('there was an error while fetching events!');
@@ -226,17 +262,16 @@ function refresh_room_calendar(id)
 function open_room_calendar(id, name)
 {
   $("#room_label").html(name);
-  $("#book_room_id").val(id);
+  $("#booking_room_id").val(id);
   refresh_room_calendar();
   $("#div_room").show();
 }
 
-function delete_booking(id, name, start, end)
+function delete_booking()
 {
-  var r=confirm("Yakin menghapus booking dari " + name + " ?");
+  var r=confirm("Yakin menghapus booking dari " + $("#booking_title").val() + " ?");
   if (r==true)
   {
-    $("#book_id").val(id);
     call_ajax("delete_booking");
   }
   else
@@ -258,18 +293,18 @@ $(function() {
   call_ajax("get_rooms");
   
   //  init datepicker
-  $("#book_date_in").datepicker({
+  $("#booking_start").datepicker({
     changeMonth: true,
     dateFormat: "yy-mm-dd",
     onClose: function(selectedDate) {
-      $("#book_date_out").datepicker("option", "minDate", selectedDate);
+      $("#booking_end").datepicker("option", "minDate", selectedDate);
     }
   });
-  $("#book_date_out").datepicker({
+  $("#booking_end").datepicker({
     changeMonth: true,
     dateFormat: "yy-mm-dd",
     onClose: function(selectedDate) {
-      $("#book_date_in").datepicker("option", "maxDate", selectedDate);
+      $("#booking_start").datepicker("option", "maxDate", selectedDate);
     }
   });
   
@@ -285,7 +320,7 @@ $(function() {
       month: "MMM yyyy"
     },
     eventClick: function(calEvent, jsEvent, view) {
-      delete_booking(calEvent.id, calEvent.title, calEvent.start, calEvent.end);
+      open_modal_booking("update", calEvent.id, calEvent.title, calEvent.start, calEvent.end);
     }
   });
   $("#div_room").hide();

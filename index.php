@@ -27,6 +27,12 @@
     <div class="row">     
       <div class="large-4 columns">
         <div><a href="#" onclick="open_modal_room('create')" title="Tambah Kamar"><i class="icon-plus"></i> Tambah Kamar</a></div>
+        <br />
+        <form>
+          <label for="filter_room_name">Nama Kamar</label>
+          <input type="text" id="filter_room_name" name="filter_room[name]" />
+          <a href="#" id="btn_search" class="small button" onclick="call_ajax('get_rooms')">Cari Kamar</a>
+        </form>
         <div id="room_list"></div>
       </div>
       
@@ -35,10 +41,16 @@
         <div><a href="#" onclick="open_modal_booking('create')" title="Tambah Kamar"><i class="icon-plus"></i> Booking Kamar</a></div>
         <div id="room_calendar"></div>
       </div>
+      
       <div class="large-4 columns">        
         <form id="form_search">
           <label for="search_date">Tanggal</label>
           <input type="text" id="search_date" name="search[date]" />
+          <label for="search_sort">Urut Berdasarkan</label>
+          <select id="search_sort" name="search[sort]">
+            <option value="rooms.name">Nama Kamar</option>
+            <option value="bookings.title">Nama Penghuni</option>
+          </select>
           <a href="#" id="btn_search" class="small button" onclick="call_ajax('get_booking')">Lihat Kamar</a>
         </form>
         
@@ -71,8 +83,8 @@
           </div>
           
           <div class="large-10 columns">
-            <a href="#" id="btn_create" class="small button" onclick="call_ajax('create_room')">Tambah Kamar</a>
-            <a href="#" id="btn_update" class="small button" onclick="call_ajax('update_room')">Ubah Nama Kamar</a>
+            <a href="#" id="btn_create_room" class="small button" onclick="call_ajax('create_room')">Tambah Kamar</a>
+            <a href="#" id="btn_update_room" class="small button" onclick="call_ajax('update_room')">Ubah Nama Kamar</a>
           </div>
         </div>
       </form>
@@ -81,32 +93,34 @@
 
     <div id="modal_booking" class="reveal-modal small">
       <div class="row">
-        <div id="ajax_message_book" class="large-8 columns">
+        <div id="ajax_message_booking" class="large-8 columns">
         </div>
       </div>
       
       <form id="form_booking">
-        <input type="hidden" id="book_id" name="book_id">
-        <input type="hidden" id="book_room_id" name="book[room_id]">
+        <input type="hidden" id="booking_id" name="booking[id]">
+        <input type="hidden" id="booking_room_id" name="booking[room_id]">
         <div class="row">
           <div class="large-6 columns">
-            <label for="book_date_in">Dari Tanggal</label>
-            <input type="text" id="book_date_in" name="book[date_in]" readonly>
+            <label for="booking_start">Dari Tanggal</label>
+            <input type="text" id="booking_start" name="booking[start]" readonly>
           </div>
           <div class="large-6 columns">
-            <label for="book_date_out">Sampai Tanggal</label>
-            <input type="text" id="book_date_out" name="book[date_out]" readonly>
+            <label for="booking_end">Sampai Tanggal</label>
+            <input type="text" id="booking_end" name="booking[end]" readonly>
           </div>
         </div>
         <div class="row">
           <div class="large-12 columns">
-            <label for="book_name">Nama Penghuni</label>
-            <input type="text" id="book_name" name="book[name]">
+            <label for="booking_title">Nama Penghuni</label>
+            <input type="text" id="booking_title" name="booking[title]">
           </div>
         </div>
         <div class="row">
           <div class="large-12 columns">
-            <a href="#" id="btn_book" class="small button" onclick="call_ajax('create_booking')">Booking</a>
+            <a href="#" id="btn_create_booking" class="small button" onclick="call_ajax('create_booking')">Tambah Booking</a>
+            <a href="#" id="btn_update_booking" class="small button" onclick="call_ajax('update_booking')">Ubah Booking</a>
+            <a href="#" id="btn_delete_booking" class="small button" onclick="delete_booking()">Hapus Booking</a>
           </div>
         </div>
       </form>

@@ -3,8 +3,9 @@ require_once("include/func_db.php");
 
 $action = $_POST["action"];
 $room = $_POST["room"];
-$book = $_POST["book"];
+$booking = $_POST["booking"];
 $search = $_POST["search"];
+$filter_room = $_POST["filter_room"];
 
 function make_link($link, $label, $onclick=null, $icon=null, $title=null)
 {
@@ -14,7 +15,7 @@ function make_link($link, $label, $onclick=null, $icon=null, $title=null)
 switch($action)
 {
   case "get_rooms":
-    $sql = "SELECT id, name, gender FROM rooms";
+    $sql = "SELECT id, name, gender FROM rooms WHERE name like '%".$filter_room["name"]."%'";
     $rows = db_select($sql, $db_rooms);
     echo "<br />Total jumlah kamar : ".count($rows)."<br /><br />";
     echo "<table>";
@@ -55,30 +56,50 @@ switch($action)
     break;
     
   case "create_booking":
-    $sql = "SELECT id FROM bookings WHERE room_id='".$book["room_id"]."' AND ";
-    $sql .= "((start <= '".$book["date_in"]."' AND '".$book["date_in"]."' <= end) ";
-    $sql .= "OR (start <= '".$book["date_out"]."' AND '".$book["date_out"]."' <= end) ";
-    $sql .= "OR ('".$book["date_in"]."' <= start AND start <= '".$book["date_out"]."') ";
-    $sql .= "OR ('".$book["date_in"]."' <= end AND end <= '".$book["date_out"]."')) ";
+    $sql = "SELECT id FROM bookings WHERE room_id='".$booking["room_id"]."' AND ";
+    $sql .= "((start <= '".$booking["start"]."' AND '".$booking["start"]."' <= end) ";
+    $sql .= "OR (start <= '".$booking["end"]."' AND '".$booking["end"]."' <= end) ";
+    $sql .= "OR ('".$booking["start"]."' <= start AND start <= '".$booking["end"]."') ";
+    $sql .= "OR ('".$booking["start"]."' <= end AND end <= '".$booking["end"]."')) ";
     $rows = db_select($sql, $db_rooms);
     if (!count($rows))
     {
-      $sql = "INSERT INTO bookings (title, start, end, room_id) VALUES ('".$book["name"]."', '".$book["date_in"]."', '".$book["date_out"]."', '".$book["room_id"]."')";
+      $sql = "INSERT INTO bookings (title, start, end, room_id) VALUES ('".$booking["title"]."', '".$booking["start"]."', '".$booking["end"]."', '".$booking["room_id"]."')";
       echo $db_rooms->exec($sql) or die(print_r($db_rooms->errorInfo(), true));
     }
     else
     {
-      echo "room already booked";
+      echo "kamar sudah dibooking pada tanggal tersebut";
+    }
+    break;
+    
+  case "update_booking":
+    $sql = "SELECT id FROM bookings WHERE room_id='".$booking["room_id"]."' AND id <> ".$booking["id"]." AND ";
+    $sql .= "((start <= '".$booking["start"]."' AND '".$booking["start"]."' <= end) ";
+    $sql .= "OR (start <= '".$booking["end"]."' AND '".$booking["end"]."' <= end) ";
+    $sql .= "OR ('".$booking["start"]."' <= start AND start <= '".$booking["end"]."') ";
+    $sql .= "OR ('".$booking["start"]."' <= end AND end <= '".$booking["end"]."')) ";
+    $rows = db_select($sql, $db_rooms);
+    if (!count($rows))
+    {
+      $sql = "UPDATE bookings SET title='".$booking["title"]."', start='".$booking["start"]."', end='".$booking["end"]."' WHERE id='".$booking["id"]."'";
+      echo $db_rooms->exec($sql) or die(print_r($db_rooms->errorInfo(), true));
+    }
+    else
+    {
+      echo "kamar sudah dibooking pada tanggal tersebut";
     }
     break;
     
   case "delete_booking":
-    $sql = "DELETE FROM bookings WHERE id='".$_POST["book_id"]."'";
+    $sql = "DELETE FROM bookings WHERE id='".$booking["id"]."'";
     echo $db_rooms->exec($sql) or die(print_r($db_rooms->errorInfo(), true));
     break;
     
   case "get_booking":
-    $sql = "SELECT rooms.id, rooms.name, bookings.title FROM bookings, rooms WHERE bookings.room_id=rooms.id AND '".$search["date"]."' between bookings.start AND bookings.end";
+    $sql = "SELECT rooms.id, rooms.name, bookings.title FROM bookings, rooms ";
+    $sql .= "WHERE bookings.room_id=rooms.id AND '".$search["date"]."' between bookings.start AND bookings.end ";
+    $sql .= "ORDER BY ".$search["sort"];
     $rows_full = db_select($sql, $db_rooms);
     
     $room_ids = "";
