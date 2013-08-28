@@ -10,13 +10,23 @@
     <link rel="stylesheet" href="css/flick/jquery-ui-1.10.3.custom.min.css">
     <link rel="stylesheet" href="css/index.css">
     <script type="text/javascript" src="js/jquery-2.0.3.min.js"></script>
-    <script type="text/javascript" src="js/custom.modernizr.js"></script>
+    <script type="text/javascript" src="js/vendor/custom.modernizr.js"></script>
     <script type="text/javascript" src="js/foundation.min.js"></script>
     <script type="text/javascript" src="js/fullcalendar.min.js"></script>
     <script type="text/javascript" src="js/jquery-ui-1.10.3.custom.min.js"></script>
+    
+    <script src="js/vendor/jquery.ui.widget.js"></script>
+    <script src="js/jquery.iframe-transport.js"></script>
+    <script src="js/jquery.fileupload.js"></script>
+    
     <script type="text/javascript" src="index.js"></script>
   </head>
   <body>
+    <?php 
+      require_once("upgrade_database.php");
+      require_once("menu.php");
+    ?>
+  
     <div class="row">
       <div class="large-12 columns">
         <h1>Daftar Kamar</h1>
@@ -24,38 +34,68 @@
       </div>
     </div>
         
-    <div class="row">     
-      <div class="large-4 columns">
-        <div><a href="#" onclick="open_modal_room('create')" title="Tambah Kamar"><i class="icon-plus"></i> Tambah Kamar</a></div>
-        <br />
-        <form>
-          <label for="filter_room_name">Nama Kamar</label>
-          <input type="text" id="filter_room_name" name="filter_room[name]" />
-          <a href="#" id="btn_search" class="small button" onclick="call_ajax('get_rooms')">Cari Kamar</a>
-        </form>
-        <div id="room_list"></div>
+    <div class="row">
+      <div class="large-6 columns">
+        <div class="section-container auto" data-section>
+          <section>
+            <p class="title" data-section-title><a href="#panel1">Daftar Kamar</a></p>
+            <div class="content" data-section-content>
+              <div><a href="#" onclick="open_modal_room('create')" title="Tambah Kamar"><i class="icon-plus"></i> Tambah Kamar</a></div>
+              <br />
+              <form>
+                <label for="filter_room_name">Nama Kamar</label>
+                <input type="text" id="filter_room_name" name="filter_room[name]" />
+                <a href="#" id="btn_search" class="small button" onclick="call_ajax('get_rooms')">Cari Kamar</a>
+              </form>
+              
+              <div id="div_rooms"></div>
+            </div>
+          </section>
+          
+          <section>
+            <p class="title" data-section-title><a href="#panel2">Cari Kamar Kosong</a></p>
+            <div class="content" data-section-content>    
+              <form id="form_search">
+                <label for="search_start">Dari Tanggal</label>
+                <input type="text" id="search_start" name="search[start]" />
+                <label for="search_end">Sampai Tanggal</label>
+                <input type="text" id="search_end" name="search[end]" />
+                <a href="#" id="btn_search" class="small button" onclick="call_ajax('get_empty_rooms')">Lihat Kamar</a>
+              </form>
+              
+              <div id="div_empty_rooms"></div>
+            </div>
+          </section>
+          
+          <section>
+            <p class="title" data-section-title><a href="#panel3">Cari Nama Penghuni</a></p>
+            <div class="content" data-section-content>
+              <form>
+                <label for="search_name">Nama Group</label>
+                <input type="text" id="search_name" name="search[name]" />
+                <label for="search_title">Nama Penghuni</label>
+                <input type="text" id="search_name" name="search[title]" />
+                <a href="#" id="btn_search" class="small button" onclick="call_ajax('get_bookings')">Cari Penghuni</a>
+              </form>
+              
+              <div id="div_bookings"></div>
+            </div>
+          </section>
+        </div>
       </div>
       
-      <div id="div_room" class="large-4 columns">
-        <h2 id="room_label"></h2>
+      <div id="div_room" class="large-6 columns">
+        <div class="row">
+          <div class="large-6 column"><h3>Nama Kamar :</h3></div>
+          <div class="large-6 column"><h3 id="label_room"></h3></div>
+        </div>
+        <div class="row">
+          <div class="large-6 column"><h3>Jenis Kelamin :</h3></div>
+          <div class="large-6 column"><h3 id="label_gender"></h3></div>
+        </div>
+        <br />
         <div><a href="#" onclick="open_modal_booking('create')" title="Tambah Kamar"><i class="icon-plus"></i> Booking Kamar</a></div>
         <div id="room_calendar"></div>
-      </div>
-      
-      <div class="large-4 columns">        
-        <form id="form_search">
-          <label for="search_date">Tanggal</label>
-          <input type="text" id="search_date" name="search[date]" />
-          <label for="search_sort">Urut Berdasarkan</label>
-          <select id="search_sort" name="search[sort]">
-            <option value="rooms.name">Nama Kamar</option>
-            <option value="bookings.title">Nama Penghuni</option>
-          </select>
-          <a href="#" id="btn_search" class="small button" onclick="call_ajax('get_booking')">Lihat Kamar</a>
-        </form>
-        
-        <div id="booking_list">
-        </div>
       </div>
     </div>
     
@@ -112,10 +152,39 @@
         </div>
         <div class="row">
           <div class="large-12 columns">
+            <label for="booking_title">Nama Group</label>
+            <input type="text" id="booking_name" name="booking[name]">
+          </div>
+        </div>
+        <div class="row">
+          <div class="large-12 columns">
             <label for="booking_title">Nama Penghuni</label>
             <input type="text" id="booking_title" name="booking[title]">
           </div>
         </div>
+        <div class="row">
+          <div class="large-12 columns">
+            <label for="booking_title">Keterangan</label>
+            <textarea id="booking_note" name="booking[note]"></textarea>
+          </div>
+        </div>
+        <!--<div class="row">
+          <div class="large-12 columns">
+            <label for="booking_photo">Foto</label>
+            <input type="file" id="booking_photo" name="booking[photo]">
+            
+            <div id="progress">
+              <div class="bar" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>-->
+        <!--<div class="row">
+          <div class="large-12 columns">
+            <label for="booking_photo">Attachment</label>
+            <input type="file" id="booking_attachment" name="booking[attachment]">
+          </div>
+        </div>-->
+        
         <div class="row">
           <div class="large-12 columns">
             <a href="#" id="btn_create_booking" class="small button" onclick="call_ajax('create_booking')">Tambah Booking</a>

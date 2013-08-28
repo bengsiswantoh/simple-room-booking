@@ -15,6 +15,7 @@ function call_ajax(action)
     if (!$("#booking_title").val().length)
     {
       flag += "nama penghuni kosong \n";
+      flag += "nama penghuni kosong \n";
     }
     if (!$("#booking_start").val().length)
     {
@@ -26,9 +27,14 @@ function call_ajax(action)
     }
   }
     
-  if (action == "get_booking")
+  if (action == "get_empty_rooms")
   {
-    if (!$("#search_date").val().length)
+    if (!$("#search_start").val().length)
+    {
+      flag += "tanggal pencarian kosong";
+    }
+    
+    if (!$("#search_end").val().length)
     {
       flag += "tanggal pencarian kosong";
     }
@@ -36,6 +42,9 @@ function call_ajax(action)
   
   if (!flag.length)
   {
+    $("#div_empty_rooms").html("");
+    $("#div_bookings").html("");
+  
     ajax_load = "Please wait";
     loadUrl = "index_process.php";
 
@@ -73,15 +82,14 @@ function handle_response(action, response_text)
   switch (action)
   {
     case "get_rooms":
-      $("#room_list").html(response_text);
+      $("#div_rooms").html(response_text);
       break;
       
     case "create_room":
       if (response_text == true)
       {
-        close_modal_room();
-        refresh_search();
         $("#div_room").hide();
+        close_modal_room();
       }
       else
       {
@@ -92,9 +100,8 @@ function handle_response(action, response_text)
     case "update_room":
       if (response_text == true)
       {
-        close_modal_room();
-        refresh_search();
         $("#div_room").hide();
+        close_modal_room();
       }
       else
       {
@@ -105,9 +112,8 @@ function handle_response(action, response_text)
     case "delete_room":
       if (response_text == true)
       {
-        call_ajax("get_rooms");
-        refresh_search();
         $("#div_room").hide();
+        call_ajax("get_rooms");
       }
       else
       {
@@ -120,7 +126,6 @@ function handle_response(action, response_text)
       {
         close_modal_booking();
         refresh_room_calendar($("#booking_room_id").val());
-        refresh_search();
       }
       else
       {
@@ -133,7 +138,6 @@ function handle_response(action, response_text)
       {
         close_modal_booking();
         refresh_room_calendar($("#booking_room_id").val());
-        refresh_search();
       }
       else
       {
@@ -146,7 +150,6 @@ function handle_response(action, response_text)
       {
         close_modal_booking();
         refresh_room_calendar($("#booking_room_id").val());
-        refresh_search();
       }
       else
       {
@@ -154,8 +157,12 @@ function handle_response(action, response_text)
       }
       break;
       
-    case "get_booking":
-      $("#booking_list").html(response_text);
+    case "get_empty_rooms":
+      $("#div_empty_rooms").html(response_text);
+      break;
+      
+    case "get_bookings":
+      $("#div_bookings").html(response_text);
       break;
   }
 }
@@ -209,7 +216,7 @@ function fill_date(id, value)
   $("#" + id).val(year + "-" + month + "-" + date);
 }
 
-function open_modal_booking(action, id, title, start, end)
+function open_modal_booking(action, id, title, start, end, name, note)
 {
   $("#form_booking a").hide();
   $("#form_booking input[type=text]").val("");
@@ -225,14 +232,16 @@ function open_modal_booking(action, id, title, start, end)
     case "update":
       $("#booking_id").val(id);
       $("#booking_title").val(title);
+      $("#booking_name").val(name);
+      $("#booking_note").val(note);
       fill_date("booking_start", start);
       if (end != null)
         fill_date("booking_end", end);
       else
         fill_date("booking_end", start);
       
-      $("#booking_start").datepicker("option", "maxDate", new Date($("#booking_start").val()));
-      $("#booking_end").datepicker("option", "minDate", new Date($("#booking_end").val()));
+      $("#booking_start").datepicker("option", "maxDate", new Date($("#booking_end").val()));
+      $("#booking_end").datepicker("option", "minDate", new Date($("#booking_start").val()));
       
       $("#btn_update_booking").show();
       $("#btn_delete_booking").show();
@@ -245,7 +254,7 @@ function close_modal_booking()
   $('#modal_booking').foundation("reveal", "close");
 }
 
-function refresh_room_calendar(id)
+function refresh_room_calendar(id, date)
 {
   source = 
   {
@@ -262,13 +271,21 @@ function refresh_room_calendar(id)
   
   $("#room_calendar").fullCalendar("removeEventSource", source);
   $("#room_calendar").fullCalendar("addEventSource", source);
+  if (date != null)
+  {
+    if (date.length > 0)
+    {
+      $("#room_calendar").fullCalendar( 'gotoDate', new Date(date))
+    }
+  }
 }
 
-function open_room_calendar(id, name)
+function open_room_calendar(id, name, gender, date)
 {
-  $("#room_label").html(name);
+  $("#label_room").html(name);
+  $("#label_gender").html(gender);
   $("#booking_room_id").val(id);
-  refresh_room_calendar();
+  refresh_room_calendar($("#booking_room_id").val(), date);
   $("#div_room").show();
 }
 
@@ -281,14 +298,6 @@ function delete_booking()
   }
   else
   {
-  }
-}
-
-function refresh_search()
-{
-  if ($("#search_date").val().length)
-  {
-    call_ajax("get_booking");
   }
 }
 
@@ -313,9 +322,19 @@ $(function() {
     }
   });
   
-  $("#search_date").datepicker({
+  $("#search_start").datepicker({
     changeMonth: true,
     dateFormat: "yy-mm-dd",
+    onClose: function(selectedDate) {
+      $("#search_end").datepicker("option", "minDate", selectedDate);
+    }
+  });
+  $("#search_end").datepicker({
+    changeMonth: true,
+    dateFormat: "yy-mm-dd",
+    onClose: function(selectedDate) {
+      $("#search_start").datepicker("option", "maxDate", selectedDate);
+    }
   });
   
   //  init room calendar
@@ -325,8 +344,25 @@ $(function() {
       month: "MMM yyyy"
     },
     eventClick: function(calEvent, jsEvent, view) {
-      open_modal_booking("update", calEvent.id, calEvent.title, calEvent.start, calEvent.end);
+      open_modal_booking("update", calEvent.id, calEvent.title, calEvent.start, calEvent.end, calEvent.name, calEvent.note);
     }
   });
   $("#div_room").hide();
+  
+  //upload image
+  /*$('#booking_photo').fileupload({
+    dataType: 'json',
+    done: function (e, data) {
+        $.each(data.result.files, function (index, file) {
+            //$('<p/>').text(file.name).appendTo(document.body);
+        });
+    },
+    progressall: function (e, data) {
+        var progress = parseInt(data.loaded / data.total * 100, 10);
+        $('#progress .bar').css(
+            'width',
+            progress + '%'
+        );
+    }
+  });*/
 });

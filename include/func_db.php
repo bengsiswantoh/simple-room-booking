@@ -26,11 +26,14 @@ function db_init($PServer)
  *
  * @retun Array results
  */
-function db_select($PQuery, $PPdo)
+function db_select($PQuery, $PPdo, $PClass="")
 {
   $stmt = $PPdo->prepare($PQuery);
   $stmt->execute();
-  $results = $stmt->fetchAll();
+  if ($PClass == "class")
+    $results = $stmt->fetchAll(PDO::FETCH_CLASS);
+  else
+    $results = $stmt->fetchAll();
   return $results;
 }
 ?>

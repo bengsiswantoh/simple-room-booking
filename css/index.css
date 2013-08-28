@@ -1,3 +1,8 @@
-#room_list {
+/*#row_room_list {
   overflow: auto;
-|
+|*/
+
+.bar {
+    height: 18px;
+    background: green;
+}
