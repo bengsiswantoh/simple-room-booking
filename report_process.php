@@ -38,7 +38,7 @@ switch($action)
       $data .= "<td>".$room[1]."</td>";
       
       $sql = "SELECT title, end, start FROM bookings ";
-      $sql .= "WHERE bookings.room_id='".$room[0]."' ORDER BY start ";
+      $sql .= "WHERE bookings.room_id='".$room[0]."' ";
       $bookings = db_select($sql, $db_rooms);
       
       for ($i = $start_date; $i <= $max; $i++) 
@@ -47,11 +47,12 @@ switch($action)
         $current_date = date("Y-m-d", strtotime($year_month." +".($i - 1) ." day"));
         foreach ($bookings as $booking) 
         {
-          if ($booking[2] == $current_date)
+          $end = $booking[1];
+          $start = $booking[2];
+          if ($start <= $current_date && $current_date <= $end)
           {
             $guest = $booking[0];
-            $end = $booking[1];
-            $start = $booking[2];
+            
             break;
           }
         }
@@ -65,6 +66,10 @@ switch($action)
           if (date("Y-m", strtotime($end)) != $year_month)
           {
             $end = date("Y-m-t", strtotime($year_month));
+          }
+          if (date("Y-m", strtotime($start)) != $year_month)
+          {
+            $start = date("Y-m-", strtotime($year_month))."01";
           }
           $colspan = (date("d", strtotime($end)) - date("d", strtotime($start)));
           $i += $colspan;

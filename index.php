@@ -9,15 +9,15 @@
     <link rel="stylesheet" href="css/fullcalendar.css">
     <link rel="stylesheet" href="css/flick/jquery-ui-1.10.3.custom.min.css">
     <link rel="stylesheet" href="css/index.css">
+    <script type="text/javascript" src="js/custom.modernizr.js"></script>    
     <script type="text/javascript" src="js/jquery-2.0.3.min.js"></script>
-    <script type="text/javascript" src="js/vendor/custom.modernizr.js"></script>
     <script type="text/javascript" src="js/foundation.min.js"></script>
     <script type="text/javascript" src="js/fullcalendar.min.js"></script>
     <script type="text/javascript" src="js/jquery-ui-1.10.3.custom.min.js"></script>
     
-    <script src="js/vendor/jquery.ui.widget.js"></script>
-    <script src="js/jquery.iframe-transport.js"></script>
-    <script src="js/jquery.fileupload.js"></script>
+    <script type="text/javascript" src="js/jquery.ui.widget.js"></script>
+    <script type="text/javascript" src="js/jquery.iframe-transport.js"></script>
+    <script type="text/javascript" src="js/jquery.fileupload.js"></script>
     
     <script type="text/javascript" src="index.js"></script>
   </head>
@@ -35,7 +35,7 @@
     </div>
         
     <div class="row">
-      <div class="large-6 columns">
+      <div class="large-7 columns">
         <div class="section-container auto" data-section>
           <section>
             <p class="title" data-section-title><a href="#panel1">Daftar Kamar</a></p>
@@ -84,14 +84,14 @@
         </div>
       </div>
       
-      <div id="div_room" class="large-6 columns">
+      <div id="div_room" class="large-5 columns">
         <div class="row">
-          <div class="large-6 column"><h3>Nama Kamar :</h3></div>
-          <div class="large-6 column"><h3 id="label_room"></h3></div>
+          <div class="large-6 column"><h4>Nama Kamar :</h4></div>
+          <div class="large-6 column"><h4 id="label_room"></h4></div>
         </div>
         <div class="row">
-          <div class="large-6 column"><h3>Jenis Kelamin :</h3></div>
-          <div class="large-6 column"><h3 id="label_gender"></h3></div>
+          <div class="large-6 column"><h4>Jenis Kelamin :</h4></div>
+          <div class="large-6 column"><h4 id="label_gender"></h4></div>
         </div>
         <br />
         <div><a href="#" onclick="open_modal_booking('create')" title="Tambah Kamar"><i class="icon-plus"></i> Booking Kamar</a></div>
@@ -168,23 +168,21 @@
             <textarea id="booking_note" name="booking[note]"></textarea>
           </div>
         </div>
-        <!--<div class="row">
+        <div id="input_attachment" class="row">
           <div class="large-12 columns">
-            <label for="booking_photo">Foto</label>
-            <input type="file" id="booking_photo" name="booking[photo]">
-            
+            <label for="booking_attachment">Attachment</label>
+            <input id="booking_attachment" type="file" name="files[]" data-url="upload_file.php" multiple>
             <div id="progress">
               <div class="bar" style="width: 0%;"></div>
             </div>
+            <br />
+            <div id="list_file_booking"></div>
+            <div id="list_hidden_file_booking">
+            </div>
           </div>
-        </div>-->
-        <!--<div class="row">
-          <div class="large-12 columns">
-            <label for="booking_photo">Attachment</label>
-            <input type="file" id="booking_attachment" name="booking[attachment]">
-          </div>
-        </div>-->
+        </div>
         
+        <br />
         <div class="row">
           <div class="large-12 columns">
             <a href="#" id="btn_create_booking" class="small button" onclick="call_ajax('create_booking')">Tambah Booking</a>
@@ -193,6 +191,14 @@
           </div>
         </div>
       </form>
+      <a class="close-reveal-modal">&#215;</a>
+    </div>
+    
+    <div id="modal_attachment" class="reveal-modal small">    
+      <div class="row">
+        <div id="list_file_attachment" class="large-8 columns">
+        </div>
+      </div>
       <a class="close-reveal-modal">&#215;</a>
     </div>
     

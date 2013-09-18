@@ -4,8 +4,8 @@ require_once("include/fpdf.php");
 
 class PDF_MC_Table extends FPDF
 {
-  var $widths;
-  var $aligns;
+  var $width = 8;
+  var $height = 5;
 
   function SetWidths($w)
   {
@@ -18,43 +18,172 @@ class PDF_MC_Table extends FPDF
       //Set the array of column alignments
       $this->aligns=$a;
   }
-
-  function Row($data)
+  
+  function ToPDF($db_rooms, $year, $month)
   {
-      //Calculate the height of the row
-      $nb=0;
-      for($i=0;$i<count($data);$i++)
-          $nb=max($nb,$this->NbLines($this->widths[$i],$data[$i]));
-      $h=5*$nb;
-      //Issue a page break first if needed
-      $this->CheckPageBreak($h);
-      //Draw the cells of the row
-      for($i=0;$i<count($data);$i++)
+    $sql = "SELECT id, name FROM rooms ORDER BY gender desc, name";
+    $rooms = db_select($sql, $db_rooms);
+
+    $year_month = $year."-".$month;
+
+    $max = date("t", strtotime($year_month));
+    $start_date = 1;
+    
+    $data = array();
+    
+    $height = $this->height;
+    $width = $this->width;
+    $align = 'C';
+    
+    $this->print_header($align, $max, $start_date);
+   
+    foreach ($rooms as $room) 
+    {      
+      $sql = "SELECT title, end, start FROM bookings ";
+      $sql .= "WHERE bookings.room_id='".$room[0]."' ";
+      $bookings = db_select($sql, $db_rooms);
+      
+      //check max height
+      $nb = 1;
+      
+      $temp_nb = $this->NbLines($width * 3, $room[1]);
+      
+      
+      for ($i = $start_date; $i <= $max; $i++) 
       {
-          $w=$this->widths[$i];
-          $a=isset($this->aligns[$i]) ? $this->aligns[$i] : 'L';
-          //Save the current position
-          $x=$this->GetX();
-          $y=$this->GetY();
-          //Draw the border
-          $this->Rect($x,$y,$w,$h);
-          //Print the text
-          $this->MultiCell($w,5,$data[$i],0,$a);
-          //Put the position to the right of the cell
-          $this->SetXY($x+$w,$y);
+        $guest = "";
+        $current_date = date("Y-m-d", strtotime($year_month." +".($i - 1) ." day"));
+        foreach ($bookings as $booking) 
+        {
+          $end = $booking[1];
+          $start = $booking[2];
+          if ($start <= $current_date && $current_date <= $end)
+          {
+            $guest = $booking[0];
+            break;
+          }
+        }
+        
+        if ($guest != "")
+        {
+          if (date("Y-m", strtotime($end)) != $year_month)
+          {
+            $end = date("Y-m-t", strtotime($year_month));
+          }
+          if (date("Y-m", strtotime($start)) != $year_month)
+          {
+            $start = date("Y-m-", strtotime($year_month))."01";
+          }
+          $colspan = (date("d", strtotime($end)) - date("d", strtotime($start)));
+          $i += $colspan;
+          $temp_nb = $this->NbLines($width * ( $colspan + 1), $guest);
+        }
+        if ($nb < $temp_nb)
+        {
+          $nb = $temp_nb;
+        }
       }
-      //Go to the next line
-      $this->Ln($h);
+      $current_height = $height * $nb;
+      
+      $this->print_column($current_height, $width * 3, $room[1], $align, $max, $start_date);
+      for ($i = $start_date; $i <= $max; $i++) 
+      {
+        $guest = "";
+        $current_date = date("Y-m-d", strtotime($year_month." +".($i - 1) ." day"));
+        foreach ($bookings as $booking) 
+        {
+          $end = $booking[1];
+          $start = $booking[2];
+          if ($start <= $current_date && $current_date <= $end)
+          {
+            $guest = $booking[0]; 
+            break;
+          }
+        }
+      
+        if ($guest == "")
+        {
+          $this->print_column($current_height, $width, $guest, $align, $max, $start_date);
+        }
+        else
+        {
+          if (date("Y-m", strtotime($end)) != $year_month)
+          {
+            $end = date("Y-m-t", strtotime($year_month));
+          }
+          if (date("Y-m", strtotime($start)) != $year_month)
+          {
+            $start = date("Y-m-", strtotime($year_month))."01";
+          }
+          $colspan = (date("d", strtotime($end)) - date("d", strtotime($start)));
+          $i += $colspan;
+          
+          $this->print_column($current_height, $width * ($colspan + 1), $guest, $align, $max, $start_date, true);
+        }
+      }
+      $this->move_line($current_height);
+    }
+  }
+  
+  function print_header($align, $max, $start_date)
+  {
+    //write kamar
+    $this->print_column($this->height * 2, $this->width * 3, "Kamar", $align, $max, $start_date);
+    
+    //write tanggal
+    $this->print_column($this->height, $this->width * $max, "Tanggal", $align, $max, $start_date);
+    
+    $this->Ln($this->height);
+    $x = $this->GetX() + $this->width * 3;
+    $y = $this->GetY();
+    $this->SetXY($x, $y);
+    
+    //write date
+    for($i = $start_date; $i <= $max; $i++)
+    {
+      $this->print_column($this->height, $this->width, $i, $align, $max, $start_date);
+    }
+    
+    $this->move_line($this->height);
+  }
+  
+  function print_column($height, $width, $data, $align, $max, $start_date, $fill=false)
+  {
+    $this->CheckPageBreak($height, $data, $align, $max, $start_date);
+    
+    $x = $this->GetX();
+    $y = $this->GetY();
+    if ($fill)
+    {
+      $this->Rect($x, $y, $width, $height, "DF");
+    }
+    else
+    {
+      $this->Rect($x, $y, $width, $height);
+    }
+    $this->MultiCell($width, 5, $data, 0, $align);
+    $this->SetXY($x + $width, $y);
+  }
+  
+  function move_line($height)
+  {
+    $this->Ln($height);
+    $x = $this->GetX();
+    $y = $this->GetY();
+    $this->SetXY($x, $y);
   }
 
-  function CheckPageBreak($h)
+  function CheckPageBreak($height, $data, $align, $max, $start_date)
   {
       //If the height h would cause an overflow, add a new page immediately
-      if($this->GetY()+$h>$this->PageBreakTrigger)
-          $this->AddPage($this->CurOrientation);
+      if($this->GetY() + $height > $this->PageBreakTrigger)
+      {
+        $this->AddPage($this->CurOrientation);
+        $this->print_header($align, $max, $start_date);
+      }
   }
 
-  function NbLines($w,$txt)
+  function NbLines($w, $txt)
   {
       //Computes the number of lines a MultiCell of width w will take
       $cw=&$this->CurrentFont['cw'];
@@ -109,50 +238,10 @@ class PDF_MC_Table extends FPDF
 $month = $_GET["month"];
 $year = $_GET["year"];
 
-function GenerateWord()
-{
-    //Get a random word
-    $nb=rand(3,10);
-    $w='';
-    for($i=1;$i<=$nb;$i++)
-        $w.=chr(rand(ord('a'),ord('z')));
-    return $w;
-}
-
-function GenerateSentence()
-{
-    //Get a random sentence
-    $nb=rand(1,10);
-    $s='';
-    for($i=1;$i<=$nb;$i++)
-        $s.=GenerateWord().' ';
-    return substr($s,0,-1);
-}
-
-$sql = "SELECT id, name FROM rooms ORDER BY gender, name";
-$rooms = db_select($sql, $db_rooms);
-
-$year_month = $year."-".$month;
-
-$max = date("t", strtotime($year_month));
-$start_date = 1;
-
 $pdf=new PDF_MC_Table("L", "mm", "A4");
 $pdf->AddPage();
-$pdf->SetFont('Arial','',14);
-
-$data = array();
-
-for ($i = $start_date; $i <= $max; $i++) 
-{
-  if (strlen($i) == 1) $i = "0".$i;
-  $data .= "<th>".$i."</th>";
-}
-
-//Table with 20 rows and 4 columns
-$pdf->SetWidths(array(30,50,30,40));
-srand(microtime()*1000000);
-for($i=0;$i<20;$i++)
-    $pdf->Row(array(GenerateSentence(),GenerateSentence(),GenerateSentence(),GenerateSentence()));
+$pdf->SetFont('Arial', '', 12);
+$pdf->SetFillColor(58, 135, 173);
+$pdf->ToPDF($db_rooms, $year, $month);
 $pdf->Output();
 ?>

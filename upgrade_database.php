@@ -1,7 +1,7 @@
 <?php
 require_once("include/func_db.php");
 
-$sql = "SELECT * FROM bookings";
+/*$sql = "SELECT * FROM bookings";
 $rows = db_select($sql, $db_rooms);
 if (count($rows[0]) / 2 == 5 )
 {
@@ -25,5 +25,28 @@ if (count($rows[0]) / 2 == 5 )
     COMMIT;";
 
   echo $db_rooms->exec($sql) or die(print_r($db_rooms->errorInfo(), true));
- }
+}*/
+$sql = "SELECT * FROM versions";
+$stmt = $db_rooms->prepare($sql);
+if (!$stmt) 
+{
+  $sql = "
+    BEGIN TRANSACTION;
+    CREATE TABLE attachments
+    (
+      id INTEGER PRIMARY KEY,
+      name TEXT,
+      booking_id INTEGER
+    );
+    
+    CREATE TABLE versions
+    (
+      id INTEGER PRIMARY KEY,
+      name TEXT
+    );
+    INSERT INTO versions (name) values ('1');
+    COMMIT;";
+
+  echo $db_rooms->exec($sql) or die(print_r($db_rooms->errorInfo(), true));
+}
 ?>

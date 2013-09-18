@@ -55,7 +55,7 @@
           <div class="row">
             <div class="large-6 columns">
               <a href="#" id="btn_report" class="small button" onclick="call_ajax('get_report')">Lihat</a>
-              <!--<a href="#" id="btn_print_pdf" class="small button" onclick="print_pdf();">Buat PDF</a>-->
+              <a href="#" id="btn_print_pdf" class="small button" onclick="print_pdf();">Buat PDF</a>
             </div>
           </div>
         </form>

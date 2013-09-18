@@ -1,8 +1,0 @@
-Simple Room Booking
-using :
-PHP
-jquery (http://jquery.com/)
-jqueryui for datetime picker (http://jqueryui.com/)
-foundation (http://foundation.zurb.com/)
-FullCalendar (http://arshaw.com/fullcalendar/)
-sqlite

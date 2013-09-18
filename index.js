@@ -216,10 +216,14 @@ function fill_date(id, value)
   $("#" + id).val(year + "-" + month + "-" + date);
 }
 
-function open_modal_booking(action, id, title, start, end, name, note)
+function open_modal_booking(action, id, title, start, end, name, note, attachments)
 {
+  init_attachments();
+  $('#progress .bar').css('width', 0 + '%');
+  $("#list_file_booking").html("");
   $("#form_booking a").hide();
   $("#form_booking input[type=text]").val("");
+  $("#form_booking textarea").val("");
   $("#booking_start").datepicker("option", "maxDate", null);
   $("#booking_end").datepicker("option", "minDate", null);
   $("#ajax_message_booking").html("");
@@ -245,7 +249,22 @@ function open_modal_booking(action, id, title, start, end, name, note)
       
       $("#btn_update_booking").show();
       $("#btn_delete_booking").show();
+      
+      $.each(attachments, function( index, value ) {
+        $("#list_file_booking").append('<div id="' + value[0] + '"><a href="#" onclick="add_to_delete_file(' + value[0] + ')"><i class="icon-trash"></i>' + value[1] + '</a></div>');
+        $("#list_hidden_file_booking").append("<input type='hidden' name='exist_attachments[]' value='" +  value[1] + "' /> <br />");
+      });
       break;
+  }
+}
+
+function add_to_delete_file(id)
+{
+  var r=confirm("Yakin menghapus file ?");
+  if (r==true)
+  {
+    $("#" + id).remove();
+    $("#list_hidden_file_booking").append("<input type='hidden' name='delete_attachments[]' value='" +  id + "' /> <br />");
   }
 }
 
@@ -296,19 +315,23 @@ function delete_booking()
   {
     call_ajax("delete_booking");
   }
-  else
-  {
-  }
+}
+
+function init_attachments()
+{
+  var input = "<input type='hidden' name='new_attachments[]' />";
+  input += "<input type='hidden' name='delete_attachments[]' />";
+  $("#list_hidden_file_booking").html(input);
 }
 
 $(function() {
   $(document).foundation();
   
-  call_ajax("get_rooms");
-  
   //  init datepicker
   $("#booking_start").datepicker({
     changeMonth: true,
+    changeYear: true,
+    yearRange: "c-50:c+50",
     dateFormat: "yy-mm-dd",
     onClose: function(selectedDate) {
       $("#booking_end").datepicker("option", "minDate", selectedDate);
@@ -316,6 +339,8 @@ $(function() {
   });
   $("#booking_end").datepicker({
     changeMonth: true,
+    changeYear: true,
+    yearRange: "c-50:c+50",
     dateFormat: "yy-mm-dd",
     onClose: function(selectedDate) {
       $("#booking_start").datepicker("option", "maxDate", selectedDate);
@@ -324,6 +349,8 @@ $(function() {
   
   $("#search_start").datepicker({
     changeMonth: true,
+    changeYear: true,
+    yearRange: "c-50:c+50",
     dateFormat: "yy-mm-dd",
     onClose: function(selectedDate) {
       $("#search_end").datepicker("option", "minDate", selectedDate);
@@ -331,6 +358,8 @@ $(function() {
   });
   $("#search_end").datepicker({
     changeMonth: true,
+    changeYear: true,
+    yearRange: "c-50:c+50",
     dateFormat: "yy-mm-dd",
     onClose: function(selectedDate) {
       $("#search_start").datepicker("option", "maxDate", selectedDate);
@@ -344,25 +373,33 @@ $(function() {
       month: "MMM yyyy"
     },
     eventClick: function(calEvent, jsEvent, view) {
-      open_modal_booking("update", calEvent.id, calEvent.title, calEvent.start, calEvent.end, calEvent.name, calEvent.note);
+      open_modal_booking("update", calEvent.id, calEvent.title, calEvent.start, calEvent.end, calEvent.name, calEvent.note, calEvent.attachments);
     }
   });
   $("#div_room").hide();
   
-  //upload image
-  /*$('#booking_photo').fileupload({
+  //upload file
+  $('#booking_attachment').fileupload({
     dataType: 'json',
-    done: function (e, data) {
-        $.each(data.result.files, function (index, file) {
-            //$('<p/>').text(file.name).appendTo(document.body);
-        });
+    done: function (e, data) 
+    {
+      $.each(data.result.files, function (index, file) 
+      {
+        $("#list_file_booking").append("<div>" + file.name + "</div>");
+        $("#list_hidden_file_booking").append("<input type='hidden' name='new_attachments[]' value='" +  file.name + "' />");
+      });
     },
-    progressall: function (e, data) {
-        var progress = parseInt(data.loaded / data.total * 100, 10);
-        $('#progress .bar').css(
-            'width',
-            progress + '%'
-        );
+    progressall: function (e, data) 
+    {
+      var progress = parseInt(data.loaded / data.total * 100, 10);
+      $("#progress .bar").css
+      (
+        "width",
+        progress + '%'
+      );
     }
-  });*/
+  });
+  init_attachments();
+  
+  call_ajax("get_rooms");
 });
